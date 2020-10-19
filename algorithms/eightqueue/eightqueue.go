@@ -5,8 +5,6 @@ import (
 	"math"
 )
 
-// 回溯法（试探法）
-
 // 记录所有正确的棋子布局
 var result [][]int = [][]int{}
 
@@ -24,7 +22,6 @@ func printQueue(queue []int) {
 	fmt.Println("----------------------")
 }
 
-// param n 表示n * n棋盘
 // param row 表示行数
 // param queue 记录皇后位置
 func trial(queue []int, row int) {

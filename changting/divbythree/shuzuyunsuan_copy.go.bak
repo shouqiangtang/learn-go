@@ -1,0 +1,210 @@
+package main
+
+import (
+	"bytes"
+	"fmt"
+	//"io"
+	"os"
+	"bufio"
+	"strconv"
+	"strings"
+)
+
+// 合并数组元素
+func mergeDivByThree(arr []int) []int {
+	if len(arr) == 1 {
+		return arr
+	}
+	newArr := make([]int, 0, len(arr)-1)
+	// 将数组中的1，2相加
+	var (
+		pos1 int
+		pos2 int
+	)
+	for i:=0; i < len(arr); i++ {
+		if arr[i] == 1 {
+			pos1 = i
+		} else if arr[i] == 2 {
+			pos2 = i
+		}
+	}
+	if arr[pos1] == 1 && arr[pos2] == 2 {
+		newArr = append(newArr, 3)
+		for i := 0; i < len(arr); i++ {
+			if i != pos1 && i != pos2 {
+				newArr = append(newArr, arr[i])
+			}
+			
+		}
+		return newArr
+	}
+
+	// 筛选所有不能被3整除的数字
+	not3divs := []int{}
+	for i := 0; i < len(arr); i++ {
+		if arr[i] % 3 == 0 {
+			newArr = append(newArr, arr[i])
+		} else {
+			not3divs = append(not3divs, arr[i])
+		}
+	}
+	if len(not3divs) == 0 {
+		return newArr
+	}
+	if len(not3divs) == 1 {
+		newArr = append(newArr, not3divs...)
+		return newArr
+	}
+
+	// 尝试两两合并是否能被3整除
+	var (
+		arrof1 []int
+		arrnot1 []int
+	)
+	for i := 0; i < len(not3divs); i++ {
+		for j := 1; j < len(not3divs); j++ {
+			he := not3divs[i] + not3divs[j]
+			if he % 3 == 0 {
+				newArr = append(newArr, he)
+				newArr = append(newArr, not3divs[:i]...)
+				newArr = append(newArr, not3divs[i+1:j]...)
+				newArr = append(newArr, not3divs[j+1:]...)
+				return newArr
+			}
+		}
+		if not3divs[i] == 1 {
+			arrof1 = append(arrof1, not3divs[i])
+		} else {
+			arrnot1 = append(arrnot1, not3divs[i])
+		}
+	}
+	// 如果没有找到两数合并可被3整除的情况下，则合并1，1
+	if len(arrof1) >= 2 {
+		newArr = append(newArr, arrof1[0]+arrof1[1])
+		newArr = append(newArr, arrof1[2:]...)
+	}
+	newArr = append(newArr, arrnot1...)
+	return newArr
+}
+
+func mergeElems(arr []int) []int {
+	if len(arr) == 1 {
+		return arr
+	}
+	var newArr []int
+	for {
+		newArr = mergeDivByThree(arr)
+		if len(newArr) == len(arr) {
+			break
+		}
+		arr = newArr
+	}
+	return newArr
+}
+
+func countByDiv3(arr []int) int {
+	count := 0
+	for i := 0; i < len(arr); i++ {
+		if arr[i] % 3 == 0 {
+			count++
+		}
+	}
+	return count
+}
+
+func parseInput(input string) ([][]int, error) {
+	arrs := [][]int{}
+	b := bytes.NewBufferString(input)
+	// 获取数列数量
+	numStr, err := b.ReadString('\n')
+	if err != nil {
+		return nil, err
+	}
+	numStr = strings.TrimSpace(numStr)
+	num, err := strconv.Atoi(numStr)
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < num; i++ {
+		countStr, err := b.ReadString('\n')
+		if err != nil {
+			return nil, err
+		}
+		countStr = strings.TrimSpace(countStr)
+		count, err := strconv.Atoi(countStr)
+		if err != nil {
+			return nil, err
+		}
+		arrStr, err := b.ReadString('\n')
+		if err != nil {
+			return nil, err
+		}
+		arrStr = strings.TrimSpace(arrStr)
+		strArr := strings.SplitN(arrStr, " ", count)
+		arr := []int{}
+		for _, v := range strArr {
+			i, _ := strconv.Atoi(v)
+			arr = append(arr, i)
+		}
+		arrs = append(arrs, arr)
+	}
+	return arrs, nil
+}
+
+func scanStdin() ([][]int, error) {
+	scanner := bufio.NewScanner(os.Stdin)
+	// 获取第一行
+	scanner.Scan()
+	numLine := scanner.Text()
+	num, err := strconv.Atoi(numLine)
+	if err != nil {
+		return nil, err
+	}
+	arrs := make([][]int, 0, num)
+	for i := 0; i < num; i++ {
+		scanner.Scan()
+		countLine := scanner.Text()
+		count, err := strconv.Atoi(countLine)
+		if err != nil {
+			return nil, err
+		}
+		// 获取数组行
+		scanner.Scan()
+		arrLine := scanner.Text()
+		arrStrs := strings.SplitN(arrLine, " ", count)
+		arr := make([]int, 0, count)
+		for _, v := range arrStrs {
+			i, _ := strconv.Atoi(v)
+			arr = append(arr, i)
+		}
+		arrs = append(arrs, arr)
+	}
+	return arrs, nil
+}
+
+func main() {
+//input := `2
+//
+//2 3 1
+//
+//1 1 1 2 2
+//
+//arrs, err := parseInput(input)
+//if err != nil {
+//	fmt.Println(err)
+//	return
+	//}
+
+	arrs, err := scanStdin()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	for _, arr := range arrs {
+		newArr := mergeElems(arr)
+		count := countByDiv3(newArr)
+		//fmt.Printf("orgin: %v, after: %v, count: %d\n", arr, newArr, count)
+		fmt.Println(count)
+	}	
+}
